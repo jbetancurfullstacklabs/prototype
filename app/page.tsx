@@ -239,11 +239,6 @@ export default function Home() {
   return (
     <div>
       <div className="flex flex-col items-center space-y-4 p-4">
-        <div>common 5+ letters: {longWords}</div>
-        <div>med repeated letters: {medianValue}</div>
-        <div>med score, all words: {medianPoints}</div>
-        <div>med score, top 12 points (&gt;25): {medianPoints12}</div>
-        <div>Median points top 12 scoring words: {medianMaxPoints12}</div>
         <div>
           <input
             type="text"
@@ -269,24 +264,36 @@ export default function Home() {
           Analize
         </button>
 
+        <div>common 5+ letters: {longWords}</div>
+        <div>med repeated letters: {medianValue}</div>
+        <div>med score, all words: {medianPoints}</div>
+        <div>med score, top 12 points (&gt;25): {medianPoints12}</div>
+        <div>Median points top 12 scoring words: {medianMaxPoints12}</div>
+
         <div className="mt-4 font-semibold">
           total pangrams: {pangrams.length}
         </div>
-        <div className="mt-2 space-y-2 overflow-auto border rounded-md h-48 p-2">
-          {pangrams.map((pangram, index) => (
-            <div key={index} className="border-b border-gray-200 pb-2">
-              {pangram}
-            </div>
-          ))}
-        </div>
+        {pangrams && pangrams.length > 0 && (
+          <div className="mt-2 space-y-2 overflow-auto border rounded-md h-48 p-2">
+            {pangrams.map((pangram, index) => (
+              <div key={index} className="border-b border-gray-200 pb-2">
+                {pangram}
+              </div>
+            ))}
+          </div>
+        )}
+
         <div>word count: {wordsWithLettersAndMainLetter.length}</div>
-        <div className="mt-2 space-y-2 overflow-auto border rounded-md h-48 p-2">
-          {wordsWithLettersAndMainLetter.map((word, index) => (
-            <div key={index} className="border-b border-gray-200 pb-2">
-              {word}
+        {wordsWithLettersAndMainLetter &&
+          wordsWithLettersAndMainLetter.length > 0 && (
+            <div className="mt-2 space-y-2 overflow-auto border rounded-md h-48 p-2">
+              {wordsWithLettersAndMainLetter.map((word, index) => (
+                <div key={index} className="border-b border-gray-200 pb-2">
+                  {word}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
       </div>
     </div>
   );
