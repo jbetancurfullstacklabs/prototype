@@ -1,7 +1,9 @@
 "use client";
 import { GAME_LIST, COMMON_WORDS } from "../constants";
 import React, { useState } from "react";
+import classNames from "classnames";
 
+// Main component that renders the homepage and handles word analysis
 export default function Home() {
   const [word, setWord] = useState("");
   const [mainLetter, setMainLetter] = useState("");
@@ -13,7 +15,9 @@ export default function Home() {
   const [medianPoints, setMedianPoints] = useState<number | null>(0);
   const [medianPoints12, setMedianPoints12] = useState<number | null>(0);
   const [medianMaxPoints12, setMedianMaxPoints12] = useState<number | null>(0);
+  const [letterMainWord, setLetterMainWord] = useState<string[]>([]);
 
+  // Calculate the median of numbers in an object after removing a specific key
   function calculateMedianRemovingKey(
     obj: Record<string, number>,
     keyToRemove: string
@@ -38,6 +42,7 @@ export default function Home() {
     }
   }
 
+  // Calculate the median of an array of numbers
   function calculateMedian(values: number[]) {
     if (values.length === 0) return null; // Handle empty array
 
@@ -51,10 +56,12 @@ export default function Home() {
     }
   }
 
+  // Arrange an array of words by their length in descending order
   function arrangeWordsByLength(words: string[]): string[] {
     return words.sort((a, b) => b.length - a.length);
   }
 
+  // Find the highest value in an array of numbers
   function findHighestValue(numbers: number[]) {
     if (numbers.length === 0) {
       return null; // Return null if the array is empty
@@ -62,6 +69,29 @@ export default function Home() {
     return Math.max(...numbers);
   }
 
+  function getUniqueLettersExcludingInitial(
+    word: string,
+    initial: string
+  ): string[] {
+    // Convert the word to lowercase to handle case insensitivity
+    const lowerCaseWord = word.toLowerCase();
+    const lowerCaseInitial = initial.toLowerCase();
+
+    // Use a Set to store unique characters excluding the initial letter
+    const uniqueLettersSet: Set<string> = new Set();
+
+    for (const letter of lowerCaseWord) {
+      if (letter !== lowerCaseInitial) {
+        uniqueLettersSet.add(letter as string); // Type assertion
+      }
+    }
+
+    const uniqueLettersArray: string[] = Array.from(uniqueLettersSet).sort();
+
+    return uniqueLettersArray;
+  }
+
+  // Filter words based on criteria including presence of letters and main letter
   function filterWords(
     word: string,
     mainLetter: string,
@@ -74,20 +104,25 @@ export default function Home() {
     number,
     number | null,
     number | null,
-    number | null
+    number | null,
+    string[]
   ] {
     const lowercaseMainLetter = mainLetter.toLowerCase();
     const letters = new Set(word.toLowerCase().split(""));
+
+    // Get all words that contain all the letters in the main word
     const wordsWithLetters = wordList.filter((listWord: string) => {
       return [...new Set(listWord.toLowerCase().split(""))].every((letter) =>
         letters.has(letter)
       );
     });
 
+    // Get all words that contain the main letter
     const wordsWithLettersAndMainLetter = wordsWithLetters.filter(
       (listWord: string) => listWord.toLowerCase().includes(lowercaseMainLetter)
     );
 
+    // Calculate the number of occurrences of each letter
     const letterCount: { [key: string]: number } = {};
     [...letters].forEach((letter) => {
       letterCount[letter] = wordsWithLettersAndMainLetter.filter(
@@ -101,8 +136,10 @@ export default function Home() {
       ).length;
     });
 
+    // Calculate the median of the letter count values excluding the main letter
     const medianValue = calculateMedianRemovingKey(letterCount, mainLetter);
 
+    // Get all pangrams that contain all the letters
     const pangrams = wordsWithLettersAndMainLetter.filter(
       (listWord: string) => {
         const wordLetters = new Set(listWord.split(""));
@@ -110,6 +147,7 @@ export default function Home() {
       }
     );
 
+    // Get the top 400 longest words pangrams that contain the main letter
     const longestWords = arrangeWordsByLength(
       wordsWithLettersAndMainLetter
     ).slice(0, 400);
@@ -204,6 +242,7 @@ export default function Home() {
     const medianPoints = calculateMedian(scores);
     const medianPoints12 = calculateMedian(scores12);
     const medianMaxPoints12 = calculateMedian(maxScoreByLetter12);
+    const letterMainWord = getUniqueLettersExcludingInitial(word, mainLetter);
 
     return [
       wordsWithLettersAndMainLetter,
@@ -213,9 +252,11 @@ export default function Home() {
       medianPoints,
       medianPoints12,
       medianMaxPoints12,
+      letterMainWord,
     ];
   }
 
+  // Handle the filtering process triggered by user action
   const handleFilter = () => {
     const [
       wordsWithLettersAndMainLetter,
@@ -225,6 +266,7 @@ export default function Home() {
       medianPoints,
       medianPoints12,
       medianMaxPoints12,
+      letterMainWord,
     ] = filterWords(word, mainLetter, GAME_LIST, COMMON_WORDS);
 
     setPangrams(pangrams);
@@ -234,6 +276,7 @@ export default function Home() {
     setMedianPoints(medianPoints);
     setMedianPoints12(medianPoints12);
     setMedianMaxPoints12(medianMaxPoints12);
+    setLetterMainWord(letterMainWord);
   };
 
   return (
@@ -263,6 +306,27 @@ export default function Home() {
         >
           Analize
         </button>
+
+        <div className="flex items-center flex-wrap justify-center w-[150px]">
+          {letterMainWord.map((letter, index) => (
+            <>
+              <div
+                key={index}
+                className={classNames(
+                  index === 0 ? "ml-[1px]" : "",
+                  "flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r"
+                )}
+              >
+                {letter}
+              </div>
+              {index === 2 && (
+                <div className="flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r">
+                  {mainLetter}
+                </div>
+              )}
+            </>
+          ))}
+        </div>
 
         <div>common 5+ letters: {longWords}</div>
         <div>med repeated letters: {medianValue}</div>
