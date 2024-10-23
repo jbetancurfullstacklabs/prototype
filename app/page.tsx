@@ -21,8 +21,10 @@ export default function Home() {
   const [medianPoints12, setMedianPoints12] = useState<number | null>(0);
   const [medianMaxPoints12, setMedianMaxPoints12] = useState<number | null>(0);
   const [letterMainWord, setLetterMainWord] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [filteredCommonWords, setFilteredCommonWords] = useState<string[]>([]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [letterFilterCommonWords, setLetterFilterCommonWords] = useState("");
   const [results, setResults] = useState<Result[]>([]);
 
