@@ -5,6 +5,11 @@ import classNames from "classnames";
 
 // Main component that renders the homepage and handles word analysis
 export default function Home() {
+  interface Result {
+    filteredWord: string;
+    matchingWords: string[];
+  }
+
   const [word, setWord] = useState("");
   const [mainLetter, setMainLetter] = useState("");
   const [pangrams, setPangrams] = useState<string[]>([]);
@@ -16,6 +21,12 @@ export default function Home() {
   const [medianPoints12, setMedianPoints12] = useState<number | null>(0);
   const [medianMaxPoints12, setMedianMaxPoints12] = useState<number | null>(0);
   const [letterMainWord, setLetterMainWord] = useState<string[]>([]);
+  const [filteredCommonWords, setFilteredCommonWords] = useState<string[]>([]);
+
+  const [letterFilterCommonWords, setLetterFilterCommonWords] = useState("");
+  const [results, setResults] = useState<Result[]>([]);
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
   // Calculate the median of numbers in an object after removing a specific key
   function calculateMedianRemovingKey(
@@ -142,7 +153,7 @@ export default function Home() {
     // Get all pangrams that contain all the letters
     const pangrams = wordsWithLettersAndMainLetter.filter(
       (listWord: string) => {
-        const wordLetters = new Set(listWord.split(""));
+        const wordLetters = new Set(listWord.toLowerCase().split(""));
         return [...letters].every((letter) => wordLetters.has(letter));
       }
     );
@@ -256,6 +267,46 @@ export default function Home() {
     ];
   }
 
+  const hasAtLeastSevenDifferentLetters = (word: string): boolean => {
+    const uniqueLetters = new Set(word.toLowerCase());
+    return uniqueLetters.size >= 7; // Ensure at least 7 different letters
+  };
+
+  // Add this function to handle button clicks for alphabet letters
+  const handleLetterClick = (letter: string) => {
+    setLetterFilterCommonWords(letter); // Set the main letter
+    const filteredWords = COMMON_WORDS.filter(
+      (word) =>
+        word.toLowerCase().startsWith(letter.toLowerCase()) &&
+        hasAtLeastSevenDifferentLetters(word)
+    );
+    setFilteredCommonWords(filteredWords); // Set the filtered common words
+
+    const results: Result[] = [];
+    filteredWords.forEach((filteredWord) => {
+      // Create a Set of letters from the current filtered word for comparison
+      const lettersSet = new Set(filteredWord.toLowerCase());
+
+      // Find words from GAME_LIST that use all the same letters at least once
+      const matchingWords = GAME_LIST.filter((gameWord) => {
+        // Create a Set of letters for the gameWord
+        const gameLettersSet = new Set(gameWord.toLowerCase());
+
+        // Check if every letter in the filteredWord's lettersSet is present in the gameWord's lettersSet
+        return [...lettersSet].every((letter) => gameLettersSet.has(letter));
+      });
+
+      if (matchingWords.length >= 10) {
+        // Add the matching words to the results array
+        results.push({ filteredWord, matchingWords });
+      }
+
+      // Sort results by the length of matchingWords in descending order
+      results.sort((a, b) => b.matchingWords.length - a.matchingWords.length);
+      setResults(results);
+    });
+  };
+
   // Handle the filtering process triggered by user action
   const handleFilter = () => {
     const [
@@ -282,6 +333,47 @@ export default function Home() {
   return (
     <div>
       <div className="flex flex-col items-center space-y-4 p-4">
+        {/* Render buttons for each letter in the alphabet */}
+        <div>Filter commons words by letter with at least 10 pangrams:</div>
+        <div className="flex space-x-2">
+          {alphabet.map((letter) => (
+            <button
+              key={letter}
+              onClick={() => handleLetterClick(letter)}
+              className="bg-gray-300 text-black rounded-md p-2 hover:bg-gray-400"
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+
+        {/* Render Matching Results */}
+        {results && results.length > 0 && (
+          <div>
+            <h3 className="font-semibold mt-4">
+              Common words with at least 10 pangrams:
+            </h3>
+            <table className="min-w-full border border-gray-300">
+              <thead>
+                <tr>
+                  <th className="border px-4 py-2">Words:</th>
+                  <th className="border px-4 py-2">Pangrams Count:</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((result, index) => (
+                  <tr key={index}>
+                    <td className="border px-4 py-2">{result.filteredWord}</td>
+                    <td className="border px-4 py-2">
+                      {result.matchingWords.length}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         <div>
           <input
             type="text"
