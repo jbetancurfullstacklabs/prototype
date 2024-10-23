@@ -274,9 +274,10 @@ export default function Home() {
     return uniqueLetters.size >= 7; // Ensure at least 7 different letters
   };
 
-  // Add this function to handle button clicks for alphabet letters
   const handleLetterClick = (letter: string) => {
     setLetterFilterCommonWords(letter); // Set the main letter
+
+    // Filter common words based on criteria
     const filteredWords = COMMON_WORDS.filter(
       (word) =>
         word.toLowerCase().startsWith(letter.toLowerCase()) &&
@@ -284,29 +285,47 @@ export default function Home() {
     );
     setFilteredCommonWords(filteredWords); // Set the filtered common words
 
+    // Filter GAME_LIST to only include words with at least 7 different letters
+    const filteredGameList = GAME_LIST.filter((gameWord) =>
+      hasAtLeastSevenDifferentLetters(gameWord)
+    );
+
+    // Pre-compute letter sets for filteredGameList
+    const gameLetterSets = new Map<string, Set<string>>();
+    filteredGameList.forEach((gameWord) => {
+      gameLetterSets.set(gameWord, new Set(gameWord.toLowerCase()));
+    });
+
     const results: Result[] = [];
+
     filteredWords.forEach((filteredWord) => {
       // Create a Set of letters from the current filtered word for comparison
       const lettersSet = new Set(filteredWord.toLowerCase());
 
-      // Find words from GAME_LIST that use all the same letters at least once
-      const matchingWords = GAME_LIST.filter((gameWord) => {
-        // Create a Set of letters for the gameWord
-        const gameLettersSet = new Set(gameWord.toLowerCase());
+      const matchingWords: string[] = []; // Array to hold matching words
 
+      // Batch processing using the pre-computed letter sets
+      for (const [gameWord, gameLettersSet] of gameLetterSets) {
         // Check if every letter in the filteredWord's lettersSet is present in the gameWord's lettersSet
-        return [...lettersSet].every((letter) => gameLettersSet.has(letter));
-      });
+        const isMatch = [...lettersSet].every((letter) =>
+          gameLettersSet.has(letter)
+        );
+
+        if (isMatch) {
+          // If it matches, add to the matchingWords array
+          matchingWords.push(gameWord);
+        }
+      }
 
       if (matchingWords.length >= 10) {
         // Add the matching words to the results array
         results.push({ filteredWord, matchingWords });
       }
-
-      // Sort results by the length of matchingWords in descending order
-      results.sort((a, b) => b.matchingWords.length - a.matchingWords.length);
-      setResults(results);
     });
+
+    // Sort results by the length of matchingWords in descending order
+    results.sort((a, b) => b.matchingWords.length - a.matchingWords.length);
+    setResults(results); // Update the results state
   };
 
   // Handle the filtering process triggered by user action
