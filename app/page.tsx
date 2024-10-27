@@ -5,9 +5,12 @@ import classNames from "classnames";
 
 // Main component that renders the homepage and handles word analysis
 export default function Home() {
-  interface Result {
-    filteredWord: string;
-    matchingWords: string[];
+  interface FilteredByLetterCommonWords {
+    word: string;
+    pangrams: string[];
+    commonPangrams: string[];
+    playableWords: string[];
+    playableCommonWords: string[];
   }
 
   const [word, setWord] = useState("");
@@ -21,12 +24,7 @@ export default function Home() {
   const [medianPoints12, setMedianPoints12] = useState<number | null>(0);
   const [medianMaxPoints12, setMedianMaxPoints12] = useState<number | null>(0);
   const [letterMainWord, setLetterMainWord] = useState<string[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [filteredCommonWords, setFilteredCommonWords] = useState<string[]>([]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [letterFilterCommonWords, setLetterFilterCommonWords] = useState("");
-  const [results, setResults] = useState<Result[]>([]);
+  const [results, setResults] = useState<FilteredByLetterCommonWords[]>([]);
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -269,63 +267,123 @@ export default function Home() {
     ];
   }
 
-  const hasAtLeastSevenDifferentLetters = (word: string): boolean => {
+  const hasSevenDifferentLetters = (word: string): boolean => {
     const uniqueLetters = new Set(word.toLowerCase());
-    return uniqueLetters.size >= 7; // Ensure at least 7 different letters
+    return uniqueLetters.size == 7;
+  };
+
+  const isPlayableWord = (word: string): boolean => {
+    const uniqueLetters = new Set(word.toLowerCase());
+    return uniqueLetters.size <= 7;
   };
 
   const handleLetterClick = (letter: string) => {
-    setLetterFilterCommonWords(letter); // Set the main letter
-
-    // Filter common words based on criteria
-    const filteredWords = COMMON_WORDS.filter(
+    const commonWordsByInitialPangrams = COMMON_WORDS.filter(
       (word) =>
         word.toLowerCase().startsWith(letter.toLowerCase()) &&
-        hasAtLeastSevenDifferentLetters(word)
-    );
-    setFilteredCommonWords(filteredWords); // Set the filtered common words
-
-    // Filter GAME_LIST to only include words with at least 7 different letters
-    const filteredGameList = GAME_LIST.filter((gameWord) =>
-      hasAtLeastSevenDifferentLetters(gameWord)
+        hasSevenDifferentLetters(word)
     );
 
-    // Pre-compute letter sets for filteredGameList
-    const gameLetterSets = new Map<string, Set<string>>();
-    filteredGameList.forEach((gameWord) => {
-      gameLetterSets.set(gameWord, new Set(gameWord.toLowerCase()));
-    });
+    const commonWordsPlayable = COMMON_WORDS.filter(
+      (word) =>
+        word.toLowerCase().includes(letter.toLowerCase()) &&
+        isPlayableWord(word)
+    );
 
-    const results: Result[] = [];
+    const commonWordsFilteredByLetterPangrams = COMMON_WORDS.filter(
+      (word) =>
+        word.toLowerCase().includes(letter.toLowerCase()) &&
+        hasSevenDifferentLetters(word)
+    );
 
-    filteredWords.forEach((filteredWord) => {
-      // Create a Set of letters from the current filtered word for comparison
-      const lettersSet = new Set(filteredWord.toLowerCase());
+    const gameListPlayables = GAME_LIST.filter(
+      (word) =>
+        word.toLowerCase().includes(letter.toLowerCase()) &&
+        isPlayableWord(word)
+    );
 
-      const matchingWords: string[] = []; // Array to hold matching words
+    // console.log(gameListFilteredByLetter);
 
-      // Batch processing using the pre-computed letter sets
-      for (const [gameWord, gameLettersSet] of gameLetterSets) {
-        // Check if every letter in the filteredWord's lettersSet is present in the gameWord's lettersSet
-        const isMatch = [...lettersSet].every((letter) =>
-          gameLettersSet.has(letter)
-        );
+    const gameListPangrams = GAME_LIST.reduce<
+      {
+        word: string;
+        isPangram: boolean;
+        sequence: string;
+      }[]
+    >((acc, word) => {
+      if (word.toLowerCase().includes(letter.toLowerCase())) {
+        const isPangram = hasSevenDifferentLetters(word);
+        const uniqueChars = new Set(word.toLowerCase());
+        const sequence = Array.from(uniqueChars).sort().join("");
 
-        if (isMatch) {
-          // If it matches, add to the matchingWords array
-          matchingWords.push(gameWord);
+        if (isPangram) {
+          acc.push({
+            word,
+            isPangram,
+            sequence,
+          });
         }
       }
+      return acc;
+    }, []);
 
-      if (matchingWords.length >= 10) {
-        // Add the matching words to the results array
-        results.push({ filteredWord, matchingWords });
+    // console.log(gameListPangrams);
+
+    const filteredByLetterCommonWords: FilteredByLetterCommonWords[] = [];
+
+    commonWordsByInitialPangrams.forEach((commonWordByInitialPangram) => {
+      const pangrams: string[] = [];
+      const commonPangrams: string[] = [];
+      const playableWords: string[] = [];
+      const playableCommonWords: string[] = [];
+
+      gameListPangrams.map((word) => {
+        const uniqueChars = new Set(commonWordByInitialPangram.toLowerCase());
+        const sequence = Array.from(uniqueChars).sort().join("");
+
+        if (word.sequence == sequence) {
+          pangrams.push(word.word);
+          if (commonWordsFilteredByLetterPangrams.includes(word.word)) {
+            commonPangrams.push(word.word);
+          }
+        }
+      });
+
+      if (pangrams.length >= 10 && commonPangrams.length >= 5) {
+        filteredByLetterCommonWords.push({
+          word: commonWordByInitialPangram,
+          pangrams,
+          commonPangrams,
+          playableWords,
+          playableCommonWords,
+        });
       }
     });
 
-    // Sort results by the length of matchingWords in descending order
-    results.sort((a, b) => b.matchingWords.length - a.matchingWords.length);
-    setResults(results); // Update the results state
+    filteredByLetterCommonWords.forEach((filteredByLetterCommonWord, index) => {
+      const playableWords = gameListPlayables.filter((word) => {
+        const allowedSet = new Set(
+          filteredByLetterCommonWord.word.toLowerCase()
+        );
+        for (const char of word.toLowerCase()) {
+          if (!allowedSet.has(char)) {
+            return false;
+          }
+        }
+        if (commonWordsPlayable.includes(word) && word.length >= 5) {
+          filteredByLetterCommonWords[index].playableCommonWords.push(word);
+        }
+        return true;
+      });
+      filteredByLetterCommonWords[index].playableWords = playableWords;
+    });
+
+    filteredByLetterCommonWords.sort(
+      (a, b) => b.pangrams.length - a.pangrams.length
+    );
+    setResults(filteredByLetterCommonWords);
+
+    console.log(filteredByLetterCommonWords);
   };
 
   // Handle the filtering process triggered by user action
@@ -377,16 +435,34 @@ export default function Home() {
             <table className="min-w-full border border-gray-300">
               <thead>
                 <tr>
-                  <th className="border px-4 py-2">Words:</th>
-                  <th className="border px-4 py-2">Pangrams Count:</th>
+                  <th className="border px-4 py-2">Words</th>
+                  <th className="border px-4 py-2">Pangrams ({">"} 10)</th>
+                  <th className="border px-4 py-2">
+                    Common word pangrams ({">"} 5)
+                  </th>
+                  <th className="border px-4 py-2">Playable words</th>
+                  <th className="border px-4 py-2">
+                    Playable common words with more than 5 letters
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {results.map((result, index) => (
+                {results.map((FilteredCommonWord, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{result.filteredWord}</td>
                     <td className="border px-4 py-2">
-                      {result.matchingWords.length}
+                      {FilteredCommonWord.word}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {FilteredCommonWord.pangrams.length}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {FilteredCommonWord.commonPangrams.length}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {FilteredCommonWord.playableWords.length}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {FilteredCommonWord.playableCommonWords.length}
                     </td>
                   </tr>
                 ))}
