@@ -412,12 +412,12 @@ export default function Home() {
       <div className="flex flex-col items-center space-y-4 p-4">
         {/* Render buttons for each letter in the alphabet */}
         <div>Filter commons words by letter with at least 10 pangrams:</div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap items-center justify-center">
           {alphabet.map((letter) => (
             <button
               key={letter}
               onClick={() => handleLetterClick(letter)}
-              className="bg-gray-300 text-black rounded-md p-2 hover:bg-gray-400"
+              className="bg-gray-300 text-black rounded-md p-2 m-2 hover:bg-gray-400"
             >
               {letter}
             </button>
@@ -430,7 +430,7 @@ export default function Home() {
             <h3 className="font-semibold mt-4">
               Common words with at least 10 pangrams:
             </h3>
-            <table className="min-w-full border border-gray-300">
+            <table className="border border-gray-300">
               <thead>
                 <tr>
                   <th className="border px-4 py-2">Words</th>
