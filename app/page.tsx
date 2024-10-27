@@ -302,8 +302,6 @@ export default function Home() {
         isPlayableWord(word)
     );
 
-    // console.log(gameListFilteredByLetter);
-
     const gameListPangrams = GAME_LIST.reduce<
       {
         word: string;
@@ -327,9 +325,11 @@ export default function Home() {
       return acc;
     }, []);
 
-    // console.log(gameListPangrams);
-
     const filteredByLetterCommonWords: FilteredByLetterCommonWords[] = [];
+
+    const commonWordsSet = new Set(
+      commonWordsFilteredByLetterPangrams.map((word) => word.toLowerCase())
+    );
 
     commonWordsByInitialPangrams.forEach((commonWordByInitialPangram) => {
       const pangrams: string[] = [];
@@ -337,14 +337,12 @@ export default function Home() {
       const playableWords: string[] = [];
       const playableCommonWords: string[] = [];
 
-      gameListPangrams.map((word) => {
-        const uniqueChars = new Set(commonWordByInitialPangram.toLowerCase());
-        const sequence = Array.from(uniqueChars).sort().join("");
-
-        if (word.sequence == sequence) {
-          pangrams.push(word.word);
-          if (commonWordsFilteredByLetterPangrams.includes(word.word)) {
-            commonPangrams.push(word.word);
+      const letterSet = new Set(commonWordByInitialPangram.toLowerCase());
+      gameListPangrams.forEach(({ word, sequence }) => {
+        if (sequence === Array.from(letterSet).sort().join("")) {
+          pangrams.push(word);
+          if (commonWordsSet.has(word.toLowerCase())) {
+            commonPangrams.push(word);
           }
         }
       });
