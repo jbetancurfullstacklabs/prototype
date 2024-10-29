@@ -2,6 +2,9 @@
 import { GAME_LIST, COMMON_WORDS } from "../constants";
 import React, { useState } from "react";
 import classNames from "classnames";
+import CodeMirror from "@uiw/react-codemirror";
+import { javascript } from "@codemirror/lang-javascript";
+import { basicDark } from "@uiw/codemirror-theme-basic";
 
 // Main component that renders the homepage and handles word analysis
 export default function Home() {
@@ -408,16 +411,18 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div className="">
       <div className="flex flex-col items-center space-y-4 p-4">
         {/* Render buttons for each letter in the alphabet */}
-        <div>Filter commons words by letter with at least 10 pangrams:</div>
+        <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+          Filter commons words by initial
+        </h3>
         <div className="flex flex-wrap items-center justify-center">
           {alphabet.map((letter) => (
             <button
               key={letter}
               onClick={() => handleLetterClick(letter)}
-              className="bg-gray-300 text-black rounded-md p-2 m-2 hover:bg-gray-400"
+              className="bg-gray-800 text-white rounded-md p-3 m-2 hover:bg-gray-700 shadow-md"
             >
               {letter}
             </button>
@@ -426,40 +431,45 @@ export default function Home() {
 
         {/* Render Matching Results */}
         {results && results.length > 0 && (
-          <div>
-            <h3 className="font-semibold mt-4">
-              Common words with at least 10 pangrams:
-            </h3>
-            <table className="border border-gray-300">
+          <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+            <table className="border-collapse border border-slate-500">
               <thead>
-                <tr>
-                  <th className="border px-4 py-2">Words</th>
-                  <th className="border px-4 py-2">Pangrams ({">"} 10)</th>
-                  <th className="border px-4 py-2">
-                    Common word pangrams ({">"} 5)
+                <tr className="">
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    Words
                   </th>
-                  <th className="border px-4 py-2">Playable words</th>
-                  <th className="border px-4 py-2">
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    Pangrams
+                    <br />({">"} 10)
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    Common word pangrams
+                    <br />({">"} 5)
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    Playable words
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
                     Playable common words with more than 5 letters
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((FilteredCommonWord, index) => (
-                  <tr key={index}>
-                    <td className="border px-4 py-2">
+                  <tr key={index} className="">
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
                       {FilteredCommonWord.word}
                     </td>
-                    <td className="border px-4 py-2">
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
                       {FilteredCommonWord.pangrams.length}
                     </td>
-                    <td className="border px-4 py-2">
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
                       {FilteredCommonWord.commonPangrams.length}
                     </td>
-                    <td className="border px-4 py-2">
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
                       {FilteredCommonWord.playableWords.length}
                     </td>
-                    <td className="border px-4 py-2">
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
                       {FilteredCommonWord.playableCommonWords.length}
                     </td>
                   </tr>
@@ -515,36 +525,74 @@ export default function Home() {
           ))}
         </div>
 
-        <div>common 5+ letters: {longWords}</div>
-        <div>med repeated letters: {medianValue}</div>
-        <div>med score, all words: {medianPoints}</div>
-        <div>med score, top 12 points (&gt;25): {medianPoints12}</div>
-        <div>Median points top 12 scoring words: {medianMaxPoints12}</div>
-
-        <div className="mt-4 font-semibold">
-          total pangrams: {pangrams.length}
-        </div>
-        {pangrams && pangrams.length > 0 && (
-          <div className="mt-2 space-y-2 overflow-auto border rounded-md h-48 p-2">
-            {pangrams.map((pangram, index) => (
-              <div key={index} className="border-b border-gray-200 pb-2">
-                {pangram}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div>word count: {wordsWithLettersAndMainLetter.length}</div>
-        {wordsWithLettersAndMainLetter &&
-          wordsWithLettersAndMainLetter.length > 0 && (
-            <div className="mt-2 space-y-2 overflow-auto border rounded-md h-48 p-2">
-              {wordsWithLettersAndMainLetter.map((word, index) => (
-                <div key={index} className="border-b border-gray-200 pb-2">
-                  {word}
-                </div>
+        <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+          <div>
+            <span className="mt-4 font-semibold">Puzzle ID: </span>
+            <span>
+              {mainLetter.toUpperCase()}-
+              {letterMainWord.map((letter) => (
+                <>{letter === mainLetter ? "" : letter.toUpperCase()}</>
               ))}
-            </div>
+            </span>
+          </div>
+          <div>
+            <span className="mt-4 font-semibold">common 5+ letters: </span>
+            <span>{longWords}</span>
+          </div>
+          <div>
+            <span className="mt-4 font-semibold">med repeated letters: </span>
+            <span>{medianValue}</span>
+          </div>
+          <div>
+            <span className="mt-4 font-semibold">med score, all words: </span>
+            <span>{medianPoints}</span>
+          </div>
+          <div>
+            <span className="mt-4 font-semibold">
+              med score, top 12 points (&gt;25):{" "}
+            </span>
+            <span>{medianPoints12}</span>
+          </div>
+          <div>
+            <span className="mt-4 font-semibold">
+              Median points top 12 scoring words:{" "}
+            </span>
+            <span>{medianMaxPoints12}</span>
+          </div>
+
+          <div>
+            <span className="mt-4 font-semibold">total pangrams:</span>
+            <span>{pangrams.length}</span>
+          </div>
+          {pangrams && pangrams.length > 0 && (
+            <CodeMirror
+              className="mb-4"
+              value={pangrams.join("\n")}
+              height="200px"
+              theme={basicDark}
+              extensions={[javascript({ jsx: true })]}
+              onChange={() => {}}
+            />
           )}
+
+          <div>
+            <span className="mt-4 font-semibold">Playable words: </span>
+            <span>{wordsWithLettersAndMainLetter.length}</span>
+          </div>
+
+          {wordsWithLettersAndMainLetter &&
+            wordsWithLettersAndMainLetter.length > 0 && (
+              <CodeMirror
+                value={
+                  '[\n"' + wordsWithLettersAndMainLetter.join('",\n"') + '"\n]'
+                }
+                height="200px"
+                theme={basicDark}
+                extensions={[javascript({ jsx: true })]}
+                onChange={() => {}}
+              />
+            )}
+        </div>
       </div>
     </div>
   );
