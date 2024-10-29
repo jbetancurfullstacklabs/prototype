@@ -498,95 +498,105 @@ export default function Home() {
           Analize
         </button>
 
-        <div className="flex items-center flex-wrap justify-center w-[150px]">
-          {letterMainWord.map((letter, index) => (
-            <>
-              <div
-                key={index}
-                className={classNames(
-                  index === 0 ? "ml-[1px]" : "",
-                  "flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r"
-                )}
-              >
-                {letter}
-              </div>
-              {index === 2 && (
-                <div className="flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r">
-                  {mainLetter}
-                </div>
-              )}
-            </>
-          ))}
-        </div>
-
-        <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-          <div>
-            <span className="mt-4 font-semibold">Puzzle ID: </span>
-            <span>
-              {mainLetter.toUpperCase()}-
-              {letterMainWord.map((letter) => (
-                <>{letter === mainLetter ? "" : letter.toUpperCase()}</>
+        {word && mainLetter && (
+          <>
+            <div className="flex items-center flex-wrap justify-center w-[150px]">
+              {letterMainWord.map((letter, index) => (
+                <>
+                  <div
+                    key={index}
+                    className={classNames(
+                      index === 0 ? "ml-[1px]" : "",
+                      "flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r"
+                    )}
+                  >
+                    {letter}
+                  </div>
+                  {index === 2 && (
+                    <div className="flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r">
+                      {mainLetter}
+                    </div>
+                  )}
+                </>
               ))}
-            </span>
-          </div>
-          <div>
-            <span className="mt-4 font-semibold">common 5+ letters: </span>
-            <span>{longWords}</span>
-          </div>
-          <div>
-            <span className="mt-4 font-semibold">med repeated letters: </span>
-            <span>{medianValue}</span>
-          </div>
-          <div>
-            <span className="mt-4 font-semibold">med score, all words: </span>
-            <span>{medianPoints}</span>
-          </div>
-          <div>
-            <span className="mt-4 font-semibold">
-              med score, top 12 points (&gt;25):{" "}
-            </span>
-            <span>{medianPoints12}</span>
-          </div>
-          <div>
-            <span className="mt-4 font-semibold">
-              Median points top 12 scoring words:{" "}
-            </span>
-            <span>{medianMaxPoints12}</span>
-          </div>
+            </div>
 
-          <div>
-            <span className="mt-4 font-semibold">total pangrams:</span>
-            <span>{pangrams.length}</span>
-          </div>
-          {pangrams && pangrams.length > 0 && (
-            <CodeMirror
-              className="mb-4"
-              value={pangrams.join("\n")}
-              height="200px"
-              theme={basicDark}
-              extensions={[javascript({ jsx: true })]}
-              onChange={() => {}}
-            />
-          )}
+            <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+              <div>
+                <span className="mt-4 font-semibold">Puzzle ID: </span>
+                <span>
+                  {mainLetter.toUpperCase()}-
+                  {letterMainWord.map((letter) => (
+                    <>{letter === mainLetter ? "" : letter.toUpperCase()}</>
+                  ))}
+                </span>
+              </div>
+              <div>
+                <span className="mt-4 font-semibold">common 5+ letters: </span>
+                <span>{longWords}</span>
+              </div>
+              <div>
+                <span className="mt-4 font-semibold">
+                  med repeated letters:{" "}
+                </span>
+                <span>{medianValue}</span>
+              </div>
+              <div>
+                <span className="mt-4 font-semibold">
+                  med score, all words:{" "}
+                </span>
+                <span>{medianPoints}</span>
+              </div>
+              <div>
+                <span className="mt-4 font-semibold">
+                  med score, top 12 points (&gt;25):{" "}
+                </span>
+                <span>{medianPoints12}</span>
+              </div>
+              <div>
+                <span className="mt-4 font-semibold">
+                  Median points top 12 scoring words:{" "}
+                </span>
+                <span>{medianMaxPoints12}</span>
+              </div>
 
-          <div>
-            <span className="mt-4 font-semibold">Playable words: </span>
-            <span>{wordsWithLettersAndMainLetter.length}</span>
-          </div>
+              <div>
+                <span className="mt-4 font-semibold">total pangrams:</span>
+                <span>{pangrams.length}</span>
+              </div>
+              {pangrams && pangrams.length > 0 && (
+                <CodeMirror
+                  className="mb-4"
+                  value={pangrams.join("\n")}
+                  height="200px"
+                  theme={basicDark}
+                  extensions={[javascript({ jsx: true })]}
+                  onChange={() => {}}
+                />
+              )}
 
-          {wordsWithLettersAndMainLetter &&
-            wordsWithLettersAndMainLetter.length > 0 && (
-              <CodeMirror
-                value={
-                  '[\n"' + wordsWithLettersAndMainLetter.join('",\n"') + '"\n]'
-                }
-                height="200px"
-                theme={basicDark}
-                extensions={[javascript({ jsx: true })]}
-                onChange={() => {}}
-              />
-            )}
-        </div>
+              <div>
+                <span className="mt-4 font-semibold">Playable words: </span>
+                <span>{wordsWithLettersAndMainLetter.length}</span>
+              </div>
+
+              {wordsWithLettersAndMainLetter &&
+                wordsWithLettersAndMainLetter.length > 0 && (
+                  <CodeMirror
+                    value={
+                      '[\n"' +
+                      wordsWithLettersAndMainLetter.join('",\n"') +
+                      '"\n]'
+                    }
+                    height="200px"
+                    theme={basicDark}
+                    extensions={[javascript({ jsx: true })]}
+                    onChange={() => {}}
+                  />
+                )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
