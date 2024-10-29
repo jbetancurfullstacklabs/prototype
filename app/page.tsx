@@ -280,6 +280,12 @@ export default function Home() {
     return uniqueLetters.size <= 7;
   };
 
+  const commonWordsPlayable = COMMON_WORDS.filter((word) =>
+    isPlayableWord(word)
+  );
+
+  const gameListPlayables = GAME_LIST.filter((word) => isPlayableWord(word));
+
   const handleLetterClick = (letter: string) => {
     const commonWordsByInitialPangrams = COMMON_WORDS.filter(
       (word) =>
@@ -287,22 +293,10 @@ export default function Home() {
         hasSevenDifferentLetters(word)
     );
 
-    const commonWordsPlayable = COMMON_WORDS.filter(
-      (word) =>
-        word.toLowerCase().includes(letter.toLowerCase()) &&
-        isPlayableWord(word)
-    );
-
     const commonWordsFilteredByLetterPangrams = COMMON_WORDS.filter(
       (word) =>
         word.toLowerCase().includes(letter.toLowerCase()) &&
         hasSevenDifferentLetters(word)
-    );
-
-    const gameListPlayables = GAME_LIST.filter(
-      (word) =>
-        word.toLowerCase().includes(letter.toLowerCase()) &&
-        isPlayableWord(word)
     );
 
     const gameListPangrams = GAME_LIST.reduce<
