@@ -493,7 +493,7 @@ export default function Home() {
               <thead>
                 <tr className="">
                   <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Words
+                    Common Words
                   </th>
                   <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
                     Pangrams
@@ -552,7 +552,7 @@ export default function Home() {
                     combination:
                   </th>
                   <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    common 5+ letters:
+                    common words (5+ letters):
                   </th>
                   <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
                     med repeated letters:
@@ -614,28 +614,26 @@ export default function Home() {
         )}
 
         {word && mainLetter && letterMainWord && (
-          <>
-            <div className="flex items-center flex-wrap justify-center w-[150px]">
-              {letterMainWord.map((letter, index) => (
-                <>
-                  <div
-                    key={index}
-                    className={classNames(
-                      index === 0 ? "ml-[1px]" : "",
-                      "flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r"
-                    )}
-                  >
-                    {letter}
-                  </div>
-                  {index === 2 && (
-                    <div className="flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r">
-                      {mainLetter}
-                    </div>
+          <div className="flex items-center flex-wrap justify-center w-[150px]">
+            {letterMainWord.map((letter, index) => (
+              <>
+                <div
+                  key={index}
+                  className={classNames(
+                    index === 0 ? "ml-[1px]" : "",
+                    "flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r"
                   )}
-                </>
-              ))}
-            </div>
-          </>
+                >
+                  {letter}
+                </div>
+                {index === 2 && (
+                  <div className="flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r">
+                    {mainLetter}
+                  </div>
+                )}
+              </>
+            ))}
+          </div>
         )}
 
         {pangrams &&
@@ -643,9 +641,9 @@ export default function Home() {
           wordsWithLettersAndMainLetter &&
           wordsWithLettersAndMainLetter.length > 0 && (
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-              <h2 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
-                Pangrams
-              </h2>
+              <h3 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+                Pangrams: {pangrams.length}
+              </h3>
               <CodeMirror
                 className="mb-4"
                 value={pangrams.join("\n")}
@@ -655,9 +653,9 @@ export default function Home() {
                 extensions={[javascript({ jsx: true })]}
                 onChange={() => {}}
               />
-              <h2 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
-                Playable words
-              </h2>
+              <h3 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+                Playable words: {wordsWithLettersAndMainLetter.length}
+              </h3>
               <CodeMirror
                 className="mb-4"
                 value={
