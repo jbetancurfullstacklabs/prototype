@@ -16,18 +16,31 @@ export default function Home() {
     playableCommonWords: string[];
   }
 
+  interface Combination {
+    letter: string;
+    sequence: string;
+    word: string;
+    wordsWithLettersAndMainLetter: string[];
+    pangrams: string[];
+    medianValue: number;
+    longWords: number;
+    medianPoints: number | null;
+    medianPoints12: number | null;
+    medianMaxPoints12: number | null;
+    letterMainWord: string[];
+  }
+
   const [word, setWord] = useState("");
   const [mainLetter, setMainLetter] = useState("");
   const [pangrams, setPangrams] = useState<string[]>([]);
   const [wordsWithLettersAndMainLetter, setWordsWithLettersAndMainLetter] =
     useState<string[]>([]);
-  const [longWords, setLongWords] = useState<number>(0);
-  const [medianValue, setMedianValue] = useState<number>(0);
-  const [medianPoints, setMedianPoints] = useState<number | null>(0);
-  const [medianPoints12, setMedianPoints12] = useState<number | null>(0);
-  const [medianMaxPoints12, setMedianMaxPoints12] = useState<number | null>(0);
   const [letterMainWord, setLetterMainWord] = useState<string[]>([]);
-  const [results, setResults] = useState<FilteredByLetterCommonWords[]>([]);
+  const [filteredResults, setFilteredResults] = useState<
+    FilteredByLetterCommonWords[]
+  >([]);
+
+  const [combinations, setCombinations] = useState<Combination[]>([]);
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -108,9 +121,7 @@ export default function Home() {
   // Filter words based on criteria including presence of letters and main letter
   function filterWords(
     word: string,
-    mainLetter: string,
-    wordList: string[],
-    commonWordsList: string[]
+    mainLetter: string
   ): [
     string[],
     string[],
@@ -121,11 +132,17 @@ export default function Home() {
     number | null,
     string[]
   ] {
+    setCombinations([]);
+    setPangrams([]);
+    setMainLetter("");
+    setLetterMainWord([]);
+    setWordsWithLettersAndMainLetter([]);
+
     const lowercaseMainLetter = mainLetter.toLowerCase();
     const letters = new Set(word.toLowerCase().split(""));
 
     // Get all words that contain all the letters in the main word
-    const wordsWithLetters = wordList.filter((listWord: string) => {
+    const wordsWithLetters = GAME_LIST.filter((listWord: string) => {
       return [...new Set(listWord.toLowerCase().split(""))].every((letter) =>
         letters.has(letter)
       );
@@ -243,7 +260,7 @@ export default function Home() {
     });
 
     const additionalFilterSet = new Set(
-      commonWordsList.map((word: string) => word.toLowerCase())
+      COMMON_WORDS.map((word: string) => word.toLowerCase())
     );
     const finalFilteredWords = wordsWithLettersAndMainLetter.filter(
       (listWord: string) => additionalFilterSet.has(listWord.toLowerCase())
@@ -287,6 +304,11 @@ export default function Home() {
   const gameListPlayables = GAME_LIST.filter((word) => isPlayableWord(word));
 
   const handleLetterClick = (letter: string) => {
+    setCombinations([]);
+    setPangrams([]);
+    setMainLetter("");
+    setLetterMainWord([]);
+    setWordsWithLettersAndMainLetter([]);
     const commonWordsByInitialPangrams = COMMON_WORDS.filter(
       (word) =>
         word.toLowerCase().startsWith(letter.toLowerCase()) &&
@@ -376,32 +398,73 @@ export default function Home() {
     filteredByLetterCommonWords.sort(
       (a, b) => b.pangrams.length - a.pangrams.length
     );
-    setResults(filteredByLetterCommonWords);
+    setFilteredResults(filteredByLetterCommonWords);
 
     console.log(filteredByLetterCommonWords);
   };
 
-  // Handle the filtering process triggered by user action
-  const handleFilter = () => {
-    const [
-      wordsWithLettersAndMainLetter,
-      pangrams,
-      medianValue,
-      longWords,
-      medianPoints,
-      medianPoints12,
-      medianMaxPoints12,
-      letterMainWord,
-    ] = filterWords(word, mainLetter, GAME_LIST, COMMON_WORDS);
+  const showWordAnalisis = (word: string) => {
+    setCombinations([]);
+    setPangrams([]);
+    setMainLetter("");
+    setLetterMainWord([]);
+    setWordsWithLettersAndMainLetter([]);
+    setWord(word);
+    const lowerCaseWord = word.toLowerCase();
+    const uniqueLettersSet: Set<string> = new Set();
 
-    setPangrams(pangrams);
-    setWordsWithLettersAndMainLetter(wordsWithLettersAndMainLetter);
-    setLongWords(longWords);
-    setMedianValue(medianValue);
-    setMedianPoints(medianPoints);
-    setMedianPoints12(medianPoints12);
-    setMedianMaxPoints12(medianMaxPoints12);
-    setLetterMainWord(letterMainWord);
+    const combinationsWords: Combination[] = [];
+
+    for (const letter of lowerCaseWord) {
+      uniqueLettersSet.add(letter as string); // Type assertion
+    }
+
+    const uniqueLettersArray: string[] = Array.from(uniqueLettersSet).sort();
+
+    [...uniqueLettersArray].forEach((letter) => {
+      const sequence = uniqueLettersArray
+        .filter(function (char) {
+          return char !== letter;
+        })
+        .join("");
+
+      const [
+        wordsWithLettersAndMainLetter,
+        pangrams,
+        medianValue,
+        longWords,
+        medianPoints,
+        medianPoints12,
+        medianMaxPoints12,
+        letterMainWord,
+      ] = filterWords(word, letter);
+      combinationsWords.push({
+        letter,
+        sequence,
+        word,
+        wordsWithLettersAndMainLetter,
+        pangrams,
+        medianValue,
+        longWords,
+        medianPoints,
+        medianPoints12,
+        medianMaxPoints12,
+        letterMainWord,
+      });
+    });
+
+    setCombinations(combinationsWords);
+
+    console.log(combinationsWords);
+  };
+
+  const showWord = (index: number) => {
+    setPangrams(combinations[index].pangrams);
+    setMainLetter(combinations[index].letter);
+    setLetterMainWord(combinations[index].letterMainWord);
+    setWordsWithLettersAndMainLetter(
+      combinations[index].wordsWithLettersAndMainLetter
+    );
   };
 
   return (
@@ -424,7 +487,7 @@ export default function Home() {
         </div>
 
         {/* Render Matching Results */}
-        {results && results.length > 0 && (
+        {filteredResults && filteredResults.length > 0 && (
           <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
             <table className="border-collapse border border-slate-500">
               <thead>
@@ -449,8 +512,12 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {results.map((FilteredCommonWord, index) => (
-                  <tr key={index} className="">
+                {filteredResults.map((FilteredCommonWord, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-slate-700 hover:cursor-pointer"
+                    onClick={() => showWordAnalisis(FilteredCommonWord.word)}
+                  >
                     <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
                       {FilteredCommonWord.word}
                     </td>
@@ -473,32 +540,80 @@ export default function Home() {
           </div>
         )}
 
-        <div>
-          <input
-            type="text"
-            placeholder="Enter a word"
-            value={word}
-            onChange={(e) => setWord(e.target.value)}
-            className="border border-gray-300 text-gray-900 rounded-md p-2"
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            placeholder="Enter a letter"
-            value={mainLetter}
-            onChange={(e) => setMainLetter(e.target.value)}
-            className="border border-gray-300 text-gray-900 rounded-md p-2"
-          />
-        </div>
-        <button
-          onClick={handleFilter}
-          className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600"
-        >
-          Analize
-        </button>
+        {combinations && combinations.length > 0 && (
+          <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+            <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+              WORD: {word.toUpperCase()}
+            </h3>
+            <table className="border-collapse border border-slate-500">
+              <thead>
+                <tr className="">
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    combination:
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    common 5+ letters:
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    med repeated letters:
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    med score, all words:
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    med score, top 12 points (&gt;25):
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    Median points top 12 scoring words:
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    pangrams:
+                  </th>
+                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    Playable words:
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {combinations.map((combination, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-slate-700 hover:cursor-pointer"
+                    onClick={() => showWord(index)}
+                  >
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
+                      {combination.letter.toUpperCase()}-
+                      {combination.sequence.toUpperCase()}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
+                      {combination.longWords}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      {combination.medianValue}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      {combination.medianPoints}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      {combination.medianPoints12}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      {combination.medianMaxPoints12}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      {combination.pangrams.length}
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      {combination.wordsWithLettersAndMainLetter.length}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        {word && mainLetter && (
+        {word && mainLetter && letterMainWord && (
           <>
             <div className="flex items-center flex-wrap justify-center w-[150px]">
               {letterMainWord.map((letter, index) => (
@@ -520,83 +635,59 @@ export default function Home() {
                 </>
               ))}
             </div>
-
-            <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-              <div>
-                <span className="mt-4 font-semibold">Puzzle ID: </span>
-                <span>
-                  {mainLetter.toUpperCase()}-
-                  {letterMainWord.map((letter) => (
-                    <>{letter === mainLetter ? "" : letter.toUpperCase()}</>
-                  ))}
-                </span>
-              </div>
-              <div>
-                <span className="mt-4 font-semibold">common 5+ letters: </span>
-                <span>{longWords}</span>
-              </div>
-              <div>
-                <span className="mt-4 font-semibold">
-                  med repeated letters:{" "}
-                </span>
-                <span>{medianValue}</span>
-              </div>
-              <div>
-                <span className="mt-4 font-semibold">
-                  med score, all words:{" "}
-                </span>
-                <span>{medianPoints}</span>
-              </div>
-              <div>
-                <span className="mt-4 font-semibold">
-                  med score, top 12 points (&gt;25):{" "}
-                </span>
-                <span>{medianPoints12}</span>
-              </div>
-              <div>
-                <span className="mt-4 font-semibold">
-                  Median points top 12 scoring words:{" "}
-                </span>
-                <span>{medianMaxPoints12}</span>
-              </div>
-
-              <div>
-                <span className="mt-4 font-semibold">total pangrams:</span>
-                <span>{pangrams.length}</span>
-              </div>
-              {pangrams && pangrams.length > 0 && (
-                <CodeMirror
-                  className="mb-4"
-                  value={pangrams.join("\n")}
-                  height="200px"
-                  theme={basicDark}
-                  extensions={[javascript({ jsx: true })]}
-                  onChange={() => {}}
-                />
-              )}
-
-              <div>
-                <span className="mt-4 font-semibold">Playable words: </span>
-                <span>{wordsWithLettersAndMainLetter.length}</span>
-              </div>
-
-              {wordsWithLettersAndMainLetter &&
-                wordsWithLettersAndMainLetter.length > 0 && (
-                  <CodeMirror
-                    value={
-                      '[\n"' +
-                      wordsWithLettersAndMainLetter.join('",\n"') +
-                      '"\n]'
-                    }
-                    height="200px"
-                    theme={basicDark}
-                    extensions={[javascript({ jsx: true })]}
-                    onChange={() => {}}
-                  />
-                )}
-            </div>
           </>
         )}
+
+        {pangrams &&
+          pangrams.length > 0 &&
+          wordsWithLettersAndMainLetter &&
+          wordsWithLettersAndMainLetter.length > 0 && (
+            <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+              <h2 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+                Pangrams
+              </h2>
+              <CodeMirror
+                className="mb-4"
+                value={pangrams.join("\n")}
+                height="200px"
+                width="500px"
+                theme={basicDark}
+                extensions={[javascript({ jsx: true })]}
+                onChange={() => {}}
+              />
+              <h2 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+                Playable words
+              </h2>
+              <CodeMirror
+                className="mb-4"
+                value={
+                  '[\n"' + wordsWithLettersAndMainLetter.join('",\n"') + '"\n]'
+                }
+                height="200px"
+                width="500px"
+                theme={basicDark}
+                extensions={[javascript({ jsx: true })]}
+                onChange={() => {}}
+              />
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(
+                      '[\n"' +
+                        wordsWithLettersAndMainLetter.join('",\n"') +
+                        '"\n]'
+                    );
+                    console.log("Content copied to clipboard");
+                  } catch (err) {
+                    console.error("Failed to copy: ", err);
+                  }
+                }}
+                className="bg-black text-white rounded-md p-3 m-2 hover:bg-gray-700 shadow-md"
+              >
+                Copy Playable Words
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );
