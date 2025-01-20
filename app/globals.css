@@ -25,3 +25,66 @@ body {
     text-wrap: balance;
   }
 }
+
+.hex {
+  display: inline-block;
+  filter: url('#goo');
+  color: white;
+  width: 118px;
+  position: absolute;
+  font-size: 27px;
+  text-align: center;
+  z-index: 1;
+  line-height: 100px;
+  text-transform: uppercase;
+}
+
+.hex::before {
+  content: "";
+  display: block;
+  background: #701a75;
+  /* 100%*cos(30) */
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding-top: 0;
+  height: 100px;
+  width: 118px;
+  z-index: -1;
+}
+
+.pos0 {
+  top: 0%;
+  left: 30%;
+}
+
+.pos1 {
+  top: 17%;
+  left: 0%;
+}
+
+.pos2 {
+  top: 17%;
+  left: 60%;
+}
+
+.pos3 {
+  top: 51%;
+  left: 60%;
+}
+
+.pos4 {
+  top: 51%;
+  left: 0%;
+}
+
+.pos5 {
+  top: 68%;
+  left: 30%;
+}
+
+.pos6 {
+  top: 34%;
+  left: 30%;
+}

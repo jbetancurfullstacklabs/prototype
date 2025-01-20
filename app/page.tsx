@@ -41,6 +41,7 @@ export default function Home() {
   >([]);
 
   const [combinations, setCombinations] = useState<Combination[]>([]);
+  const [sequence, setSequence] = useState<Combination>();
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -366,7 +367,7 @@ export default function Home() {
         }
       });
 
-      if (pangrams.length >= 10 && commonPangrams.length >= 5) {
+      if (pangrams.length >= 10 && commonPangrams.length >= 2) {
         filteredByLetterCommonWords.push({
           word: commonWordByInitialPangram,
           pangrams,
@@ -462,6 +463,7 @@ export default function Home() {
     setPangrams(combinations[index].pangrams);
     setMainLetter(combinations[index].letter);
     setLetterMainWord(combinations[index].letterMainWord);
+    setSequence(combinations[index]);
     setWordsWithLettersAndMainLetter(
       combinations[index].wordsWithLettersAndMainLetter
     );
@@ -472,7 +474,7 @@ export default function Home() {
       <div className="flex flex-col items-center space-y-4 p-4">
         {/* Render buttons for each letter in the alphabet */}
         <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
-          Filter commons words by initial
+          1. Filter all commons words by initial letter:
         </h3>
         <div className="flex flex-wrap items-center justify-center">
           {alphabet.map((letter) => (
@@ -488,151 +490,158 @@ export default function Home() {
 
         {/* Render Matching Results */}
         {filteredResults && filteredResults.length > 0 && (
-          <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-            <table className="border-collapse border border-slate-500">
-              <thead>
-                <tr className="">
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Common Words
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Pangrams
-                    <br />({">"} 10)
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Common word pangrams
-                    <br />({">"} 5)
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Playable words
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Playable common words with more than 5 letters
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredResults.map((FilteredCommonWord, index) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-slate-700 hover:cursor-pointer"
-                    onClick={() => showWordAnalisis(FilteredCommonWord.word)}
-                  >
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
-                      {FilteredCommonWord.word}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {FilteredCommonWord.pangrams.length}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {FilteredCommonWord.commonPangrams.length}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {FilteredCommonWord.playableWords.length}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {FilteredCommonWord.playableCommonWords.length}
-                    </td>
+          <>
+            <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+              2. Click the common word to check all combinations:
+            </h3>
+            <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+              <table className="border-collapse border border-slate-500">
+                <thead>
+                  <tr className="">
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      Common Words
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      Pangrams
+                      <br />({">"} 10)
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      Common word pangrams
+                      <br />({">"} 2)
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      Playable words
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      Playable common words with more than 5 letters
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredResults.map((FilteredCommonWord, index) => (
+                    <tr
+                      key={index}
+                      className={classNames("hover:cursor-pointer", FilteredCommonWord.word === word ? 'bg-pink-800' : 'hover:bg-slate-700')}
+                      onClick={() => showWordAnalisis(FilteredCommonWord.word)}
+                    >
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
+                        {FilteredCommonWord.word}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {FilteredCommonWord.pangrams.length}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {FilteredCommonWord.commonPangrams.length}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {FilteredCommonWord.playableWords.length}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {FilteredCommonWord.playableCommonWords.length}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {combinations && combinations.length > 0 && (
-          <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+          <>
             <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
-              WORD: {word.toUpperCase()}
+              3. Click the combination to see metrics:
             </h3>
-            <table className="border-collapse border border-slate-500">
-              <thead>
-                <tr className="">
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    combination:
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    common words (5+ letters):
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    med repeated letters:
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    med score, all words:
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    med score, top 12 points (&gt;25):
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Median points top 12 scoring words:
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    pangrams:
-                  </th>
-                  <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                    Playable words:
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {combinations.map((combination, index) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-slate-700 hover:cursor-pointer"
-                    onClick={() => showWord(index)}
-                  >
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
-                      {combination.letter.toUpperCase()}-
-                      {combination.sequence.toUpperCase()}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
-                      {combination.longWords}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {combination.medianValue}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {combination.medianPoints}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {combination.medianPoints12}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {combination.medianMaxPoints12}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {combination.pangrams.length}
-                    </td>
-                    <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
-                      {combination.wordsWithLettersAndMainLetter.length}
-                    </td>
+
+            <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
+              <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+                WORD: {word.toUpperCase()}
+              </h3>
+              <table className="border-collapse border border-slate-500">
+                <thead>
+                  <tr className="">
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      combination:
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      common words (5+ letters):
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      med repeated letters:
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      med score, all words:
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      med score, longest words:
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      med score, top 12 points:
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      pangrams:
+                    </th>
+                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                      Playable words:
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {combinations.map((combination, index) => (
+                    <tr
+                      key={index}
+                      className={classNames("hover:cursor-pointer", combination.sequence == sequence?.sequence ? "bg-pink-800" : "hover:bg-slate-700")}
+                      onClick={() => showWord(index)}
+                    >
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
+                        {combination.letter.toUpperCase()}-
+                        {combination.sequence.toUpperCase()}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.longWords}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.medianValue}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.medianPoints}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.medianPoints12}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.medianMaxPoints12}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.pangrams.length}
+                      </td>
+                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                        {combination.wordsWithLettersAndMainLetter.length}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {word && mainLetter && letterMainWord && (
-          <div className="flex items-center flex-wrap justify-center w-[150px]">
+          <div className="w-[300px] h-[300px] relative">
             {letterMainWord.map((letter, index) => (
-              <>
-                <div
-                  key={index}
-                  className={classNames(
-                    index === 0 ? "ml-[1px]" : "",
-                    "flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r"
-                  )}
-                >
-                  {letter}
-                </div>
-                {index === 2 && (
-                  <div className="flex items-center justify-center text-black bg-white border border-gray-300 w-[50px] h-16r">
-                    {mainLetter}
-                  </div>
-                )}
-              </>
+              <div
+                key={index}
+                className={classNames(
+                  "hex",
+                  "pos" + index)}>
+                {letter}
+              </div>
             ))}
+            <div className={classNames(
+              "hex", 
+              "pos6")}>
+              {mainLetter}
+            </div>
           </div>
         )}
 
@@ -684,6 +693,18 @@ export default function Home() {
               >
                 Copy Playable Words
               </button>
+            
+              <br/>
+              <div>
+                stats<br/>
+                common 5+ letters: {sequence?.longWords}<br/>
+                med repeated letters: {sequence?.medianValue}<br/>
+                total pangrams: {sequence?.pangrams.length}<br/>
+                med score, longest words: {sequence?.medianPoints12}<br/>
+                med score, top 12 points: {sequence?.medianMaxPoints12}<br/>
+                med score, all words: {sequence?.medianPoints}<br/>
+              </div>  
+
             </div>
           )}
       </div>
