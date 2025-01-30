@@ -49,8 +49,9 @@ export default function Home() {
   const [inputValue, setInputValue] = useState('');
   const [isValid, setIsValid] = useState(false);
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
+  const handleInputChange = (e?: MouseEvent) => {
+    const target = e?.target as HTMLInputElement; 
+    const value = target.value;
 
     // Check if the last typed character is already in the input value
     const lastChar = value[value.length - 1];
