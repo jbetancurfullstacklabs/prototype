@@ -531,7 +531,7 @@ export default function Home() {
                 type="text"
                 value={inputValue}
                 onChange={handleInputChange}
-                placeholder="Enter a string"
+                placeholder="Enter at least 2 letters"
                 className="flex-1 p-2 border text-gray-900 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
@@ -553,7 +553,7 @@ export default function Home() {
 
 
         {/* Render Matching Results */}
-        {initialLetter && inputValue && filteredResults && filteredResults.length > 0 && (
+        {isValid && initialLetter && inputValue && filteredResults && filteredResults.length > 0 && (
           <>
             <h3 className="inline-block text-2xl tracking-tigh text-slate-200">
               3. Click the common word to check all combinations:
@@ -611,7 +611,13 @@ export default function Home() {
           </>
         )}
 
-        {combinations && combinations.length > 0 && (
+        {isValid && initialLetter && inputValue && filteredResults && filteredResults.length == 0 && (
+          <>
+            There is not words
+          </>
+        )}
+
+        {isValid && combinations && combinations.length > 0 && (
           <>
             <h3 className="inline-block text-2xl tracking-tight text-slate-200">
               4. Click the combination to see metrics:
@@ -693,7 +699,7 @@ export default function Home() {
           </>
         )}
 
-        {word && mainLetter && letterMainWord && (
+        {isValid && word && mainLetter && letterMainWord && combinations && combinations.length > 0 && (
           <div className="w-[300px] h-[300px] relative">
             {letterMainWord.map((letter, index) => (
               <div
@@ -712,14 +718,15 @@ export default function Home() {
           </div>
         )}
 
-        {pangrams &&
+        {isValid && combinations && combinations.length > 0 && pangrams &&
           pangrams.length > 0 &&
           wordsWithLettersAndMainLetter &&
           wordsWithLettersAndMainLetter.length > 0 && (
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-              <h3 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">
+              <h3 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">{mainLetter.toUpperCase()}-{letterMainWord.join("").toUpperCase()}</h3>
+              <h4 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">
                 Pangrams: {pangrams.length}
-              </h3>
+              </h4>
               <CodeMirror
                 className="mb-4"
                 value={pangrams.join("\n")}
@@ -729,9 +736,9 @@ export default function Home() {
                 extensions={[javascript({ jsx: true })]}
                 onChange={() => {}}
               />
-              <h3 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">
+              <h4 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">
                 Playable words: {wordsWithLettersAndMainLetter.length}
-              </h3>
+              </h4>
               <CodeMirror
                 className="mb-4"
                 value={
