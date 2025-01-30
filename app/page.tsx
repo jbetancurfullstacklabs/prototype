@@ -49,7 +49,7 @@ export default function Home() {
   const [inputValue, setInputValue] = useState('');
   const [isValid, setIsValid] = useState(false);
 
-  const handleInputChange = (e?: MouseEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e?.target as HTMLInputElement; 
     const value = target.value;
 
