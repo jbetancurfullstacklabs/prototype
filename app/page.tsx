@@ -611,12 +611,6 @@ export default function Home() {
           </>
         )}
 
-        {isValid && initialLetter && inputValue && filteredResults && filteredResults.length == 0 && (
-          <>
-            There is not words
-          </>
-        )}
-
         {isValid && combinations && combinations.length > 0 && (
           <>
             <h3 className="inline-block text-2xl tracking-tight text-slate-200">
