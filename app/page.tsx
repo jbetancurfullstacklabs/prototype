@@ -31,6 +31,7 @@ export default function Home() {
   }
 
   const [word, setWord] = useState("");
+  const [initialLetter, setInitialLetter] = useState("");
   const [mainLetter, setMainLetter] = useState("");
   const [pangrams, setPangrams] = useState<string[]>([]);
   const [wordsWithLettersAndMainLetter, setWordsWithLettersAndMainLetter] =
@@ -44,6 +45,27 @@ export default function Home() {
   const [sequence, setSequence] = useState<Combination>();
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  const [inputValue, setInputValue] = useState('');
+  const [isValid, setIsValid] = useState(false);
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+
+    // Check if the last typed character is already in the input value
+    const lastChar = value[value.length - 1];
+    if (value.slice(0, -1).includes(lastChar)) {
+      // If the character is repeated, ignore it
+      return;
+    }
+
+    // Update the input value
+    setInputValue(value);
+
+    // Check if the input has at least 2 unique characters
+    const uniqueChars = new Set(value).size;
+    setIsValid(uniqueChars >= 2 && value.length >= 2);
+  };
 
   // Calculate the median of numbers in an object after removing a specific key
   function calculateMedianRemovingKey(
@@ -304,7 +326,7 @@ export default function Home() {
 
   const gameListPlayables = GAME_LIST.filter((word) => isPlayableWord(word));
 
-  const handleLetterClick = (letter: string) => {
+  const searchHandler = () => {
     setCombinations([]);
     setPangrams([]);
     setMainLetter("");
@@ -312,14 +334,21 @@ export default function Home() {
     setWordsWithLettersAndMainLetter([]);
     const commonWordsByInitialPangrams = COMMON_WORDS.filter(
       (word) =>
-        word.toLowerCase().startsWith(letter.toLowerCase()) &&
-        hasSevenDifferentLetters(word)
+        word.toLowerCase().startsWith(initialLetter) &&
+        hasSevenDifferentLetters(word) &&
+        inputValue.split('').every(char => word.includes(char))
     );
 
     const commonWordsFilteredByLetterPangrams = COMMON_WORDS.filter(
       (word) =>
-        word.toLowerCase().includes(letter.toLowerCase()) &&
-        hasSevenDifferentLetters(word)
+        word.toLowerCase().includes(initialLetter) &&
+        hasSevenDifferentLetters(word) &&
+        inputValue.split('').every(char => word.includes(char))
+    );
+
+    const gameListPlayablesFilteredLetter = gameListPlayables.filter(
+      (word) =>
+        word.toLowerCase().includes(initialLetter)
     );
 
     const gameListPangrams = GAME_LIST.reduce<
@@ -329,7 +358,7 @@ export default function Home() {
         sequence: string;
       }[]
     >((acc, word) => {
-      if (word.toLowerCase().includes(letter.toLowerCase())) {
+      if (word.toLowerCase().includes(initialLetter)) {
         const isPangram = hasSevenDifferentLetters(word);
         const uniqueChars = new Set(word.toLowerCase());
         const sequence = Array.from(uniqueChars).sort().join("");
@@ -354,46 +383,43 @@ export default function Home() {
     commonWordsByInitialPangrams.forEach((commonWordByInitialPangram) => {
       const pangrams: string[] = [];
       const commonPangrams: string[] = [];
-      const playableWords: string[] = [];
-      const playableCommonWords: string[] = [];
 
       const letterSet = new Set(commonWordByInitialPangram.toLowerCase());
-      gameListPangrams.forEach(({ word, sequence }) => {
-        if (sequence === Array.from(letterSet).sort().join("")) {
-          pangrams.push(word);
-          if (commonWordsSet.has(word.toLowerCase())) {
-            commonPangrams.push(word);
+      const sortedLetterSequence = Array.from(letterSet).sort().join("");
+
+      const gameListPangramsFilteredSequence = gameListPangrams.filter((pangram) => {
+        return pangram.sequence === sortedLetterSequence;
+      });
+
+      const gameListPangramsFilterePlayable = gameListPlayablesFilteredLetter.filter((word) => {
+        for (const char of word.toLowerCase()) {
+          if (!letterSet.has(char)) {
+            return false;
           }
+        }
+        return true;
+      });
+
+      const gameListPangramsFilterePlayableCommon = gameListPangramsFilterePlayable.filter((word) => {
+        return commonWordsPlayable.includes(word) && word.length >= 5
+      });
+
+      gameListPangramsFilteredSequence.forEach(({ word }) => {
+        pangrams.push(word);
+        if (commonWordsSet.has(word.toLowerCase())) {
+          commonPangrams.push(word);
         }
       });
 
-      if (pangrams.length >= 10 && commonPangrams.length >= 2) {
+      if (pangrams.length >= 1 && gameListPangramsFilterePlayable.length >= 150 && gameListPangramsFilterePlayableCommon.length >= 15 ) {
         filteredByLetterCommonWords.push({
           word: commonWordByInitialPangram,
           pangrams,
           commonPangrams,
-          playableWords,
-          playableCommonWords,
+          playableWords: gameListPangramsFilterePlayable,
+          playableCommonWords: gameListPangramsFilterePlayableCommon,
         });
       }
-    });
-
-    filteredByLetterCommonWords.forEach((filteredByLetterCommonWord, index) => {
-      const playableWords = gameListPlayables.filter((word) => {
-        const allowedSet = new Set(
-          filteredByLetterCommonWord.word.toLowerCase()
-        );
-        for (const char of word.toLowerCase()) {
-          if (!allowedSet.has(char)) {
-            return false;
-          }
-        }
-        if (commonWordsPlayable.includes(word) && word.length >= 5) {
-          filteredByLetterCommonWords[index].playableCommonWords.push(word);
-        }
-        return true;
-      });
-      filteredByLetterCommonWords[index].playableWords = playableWords;
     });
 
     filteredByLetterCommonWords.sort(
@@ -401,7 +427,6 @@ export default function Home() {
     );
     setFilteredResults(filteredByLetterCommonWords);
 
-    console.log(filteredByLetterCommonWords);
   };
 
   const showWordAnalisis = (word: string) => {
@@ -439,24 +464,25 @@ export default function Home() {
         medianMaxPoints12,
         letterMainWord,
       ] = filterWords(word, letter);
-      combinationsWords.push({
-        letter,
-        sequence,
-        word,
-        wordsWithLettersAndMainLetter,
-        pangrams,
-        medianValue,
-        longWords,
-        medianPoints,
-        medianPoints12,
-        medianMaxPoints12,
-        letterMainWord,
-      });
+      if (longWords >= 15 && (medianPoints && medianPoints >= 9) && (medianPoints12 && medianPoints12 >= 23)) {
+        combinationsWords.push({
+          letter,
+          sequence,
+          word,
+          wordsWithLettersAndMainLetter,
+          pangrams,
+          medianValue,
+          longWords,
+          medianPoints,
+          medianPoints12,
+          medianMaxPoints12,
+          letterMainWord,
+        });
+      }
+
     });
 
     setCombinations(combinationsWords);
-
-    console.log(combinationsWords);
   };
 
   const showWord = (index: number) => {
@@ -470,50 +496,87 @@ export default function Home() {
   };
 
   return (
-    <div className="">
+    <div className="bg-gray-900">
       <div className="flex flex-col items-center space-y-4 p-4">
         {/* Render buttons for each letter in the alphabet */}
-        <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+        <h3 className="inline-block text-2xl tracking-tight text-slate-200">
           1. Filter all commons words by initial letter:
         </h3>
         <div className="flex flex-wrap items-center justify-center">
           {alphabet.map((letter) => (
             <button
               key={letter}
-              onClick={() => handleLetterClick(letter)}
-              className="bg-gray-800 text-white rounded-md p-3 m-2 hover:bg-gray-700 shadow-md"
+              onClick={() => {
+                setInitialLetter(letter.toLocaleLowerCase());
+                setInputValue('');
+                setFilteredResults([]);
+                setCombinations([]);
+              }}
+              className={classNames("bg-gray-800 text-white rounded-md p-3 m-2 hover:bg-gray-700 shadow-md", initialLetter === letter.toLocaleLowerCase() ? "bg-pink-800" : "")}
             >
               {letter}
             </button>
           ))}
         </div>
 
-        {/* Render Matching Results */}
-        {filteredResults && filteredResults.length > 0 && (
+        {initialLetter && (
           <>
-            <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
-              2. Click the common word to check all combinations:
+            <h3 className="inline-block text-2xl tracking-tigh text-slate-200">
+              2. Add a new filter, searching words that start with &quot;{initialLetter.toUpperCase()}&quot; and include next letters:
+            </h3>
+
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                placeholder="Enter a string"
+                className="flex-1 p-2 border text-gray-900 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <button
+                type="submit"
+                disabled={!isValid}
+                onClick={() => searchHandler()}
+                className={`p-2 rounded ${
+                  isValid
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                See results
+              </button>            
+            </div>
+          </>
+        )}
+
+
+        {/* Render Matching Results */}
+        {initialLetter && inputValue && filteredResults && filteredResults.length > 0 && (
+          <>
+            <h3 className="inline-block text-2xl tracking-tigh text-slate-200">
+              3. Click the common word to check all combinations:
             </h3>
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
               <table className="border-collapse border border-slate-500">
                 <thead>
                   <tr className="">
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       Common Words
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       Pangrams
-                      <br />({">"} 10)
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       Common word pangrams
-                      <br />({">"} 2)
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       Playable words
+                      <br />({">"} 150)
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       Playable common words with more than 5 letters
+                      <br />({">"} 15)
                     </th>
                   </tr>
                 </thead>
@@ -524,19 +587,19 @@ export default function Home() {
                       className={classNames("hover:cursor-pointer", FilteredCommonWord.word === word ? 'bg-pink-800' : 'hover:bg-slate-700')}
                       onClick={() => showWordAnalisis(FilteredCommonWord.word)}
                     >
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
+                      <td className="border border-slate-700 p-4 text-slate-400">
                         {FilteredCommonWord.word}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {FilteredCommonWord.pangrams.length}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {FilteredCommonWord.commonPangrams.length}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {FilteredCommonWord.playableWords.length}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {FilteredCommonWord.playableCommonWords.length}
                       </td>
                     </tr>
@@ -549,39 +612,42 @@ export default function Home() {
 
         {combinations && combinations.length > 0 && (
           <>
-            <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
-              3. Click the combination to see metrics:
+            <h3 className="inline-block text-2xl tracking-tight text-slate-200">
+              4. Click the combination to see metrics:
             </h3>
 
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-              <h3 className="inline-block text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+              <h3 className="inline-block text-2xl font-extrabold  tracking-tight text-slate-200">
                 WORD: {word.toUpperCase()}
               </h3>
               <table className="border-collapse border border-slate-500">
                 <thead>
                   <tr className="">
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       combination:
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
-                      common words (5+ letters):
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
+                      common words (5+ letters)
+                      <br />({">="} 15)
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       med repeated letters:
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       med score, all words:
+                      <br />({">="} 9)
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       med score, longest words:
+                      <br />({">="} 23)
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       med score, top 12 points:
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       pangrams:
                     </th>
-                    <th className="border border-slate-300 dark:border-slate-600 font-semibold p-4 text-slate-900 dark:text-slate-200 text-center">
+                    <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
                       Playable words:
                     </th>
                   </tr>
@@ -593,29 +659,29 @@ export default function Home() {
                       className={classNames("hover:cursor-pointer", combination.sequence == sequence?.sequence ? "bg-pink-800" : "hover:bg-slate-700")}
                       onClick={() => showWord(index)}
                     >
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">
+                      <td className="border border-slate-700 p-4 text-slate-400">
                         {combination.letter.toUpperCase()}-
                         {combination.sequence.toUpperCase()}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.longWords}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.medianValue}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.medianPoints}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.medianPoints12}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.medianMaxPoints12}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.pangrams.length}
                       </td>
-                      <td className="border border-slate-300 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400 text-center">
+                      <td className="border border-slate-700 p-4 text-slate-400 text-center">
                         {combination.wordsWithLettersAndMainLetter.length}
                       </td>
                     </tr>
@@ -650,7 +716,7 @@ export default function Home() {
           wordsWithLettersAndMainLetter &&
           wordsWithLettersAndMainLetter.length > 0 && (
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
-              <h3 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+              <h3 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">
                 Pangrams: {pangrams.length}
               </h3>
               <CodeMirror
@@ -662,7 +728,7 @@ export default function Home() {
                 extensions={[javascript({ jsx: true })]}
                 onChange={() => {}}
               />
-              <h3 className="mb-4 text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-200">
+              <h3 className="mb-4 text-2xl font-extrabold  tracking-tight text-slate-200">
                 Playable words: {wordsWithLettersAndMainLetter.length}
               </h3>
               <CodeMirror
