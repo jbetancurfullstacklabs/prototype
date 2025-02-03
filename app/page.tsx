@@ -66,6 +66,11 @@ export default function Home() {
     // Check if the input has at least 2 unique characters
     const uniqueChars = new Set(value).size;
     setIsValid(uniqueChars >= 2 && value.length >= 2);
+
+    if (uniqueChars >= 2 || value.length >= 2) {
+      setFilteredResults([]);
+      setCombinations([]);
+    }
   };
 
   // Calculate the median of numbers in an object after removing a specific key
