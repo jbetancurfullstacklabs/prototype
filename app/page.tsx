@@ -590,7 +590,7 @@ export default function Home() {
         {isValid && combinations && combinations.length > 0 && (
           <>
             <h3 className="inline-block text-2xl tracking-tight text-slate-200">
-              4. Click the combination to see metrics:
+              3. Click the combination to see metrics:
             </h3>
 
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
