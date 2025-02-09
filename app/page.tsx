@@ -31,7 +31,6 @@ export default function Home() {
   }
 
   const [word, setWord] = useState("");
-  const [initialLetter, setInitialLetter] = useState("");
   const [mainLetter, setMainLetter] = useState("");
   const [pangrams, setPangrams] = useState<string[]>([]);
   const [wordsWithLettersAndMainLetter, setWordsWithLettersAndMainLetter] =
@@ -43,8 +42,6 @@ export default function Home() {
 
   const [combinations, setCombinations] = useState<Combination[]>([]);
   const [sequence, setSequence] = useState<Combination>();
-
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
   const [inputValue, setInputValue] = useState('');
   const [isValid, setIsValid] = useState(false);
@@ -63,11 +60,11 @@ export default function Home() {
     // Update the input value
     setInputValue(value);
 
-    // Check if the input has at least 2 unique characters
+    // Check if the input has at least 3 unique characters
     const uniqueChars = new Set(value).size;
-    setIsValid(uniqueChars >= 2 && value.length >= 2);
+    setIsValid(uniqueChars >= 3 && value.length >= 3);
 
-    if (uniqueChars >= 2 || value.length >= 2) {
+    if (uniqueChars >= 3 || value.length >= 3) {
       setFilteredResults([]);
       setCombinations([]);
     }
@@ -147,7 +144,7 @@ export default function Home() {
     return uniqueLettersArray;
   }
 
-  // Filter words based on criteria including presence of letters and main letter
+  // Filter words based on presence of letters
   function filterWords(
     word: string,
     mainLetter: string
@@ -330,32 +327,28 @@ export default function Home() {
     isPlayableWord(word)
   );
 
-  const gameListPlayables = GAME_LIST.filter((word) => isPlayableWord(word));
-
   const searchHandler = () => {
     setCombinations([]);
     setPangrams([]);
     setMainLetter("");
     setLetterMainWord([]);
     setWordsWithLettersAndMainLetter([]);
-    const commonWordsByInitialPangrams = COMMON_WORDS.filter(
+
+    const commonWordsFilteredByLetters = COMMON_WORDS.filter(
       (word) =>
-        word.toLowerCase().startsWith(initialLetter) &&
         hasSevenDifferentLetters(word) &&
         inputValue.split('').every(char => word.includes(char))
     );
 
-    const commonWordsFilteredByLetterPangrams = COMMON_WORDS.filter(
-      (word) =>
-        word.toLowerCase().includes(initialLetter) &&
-        hasSevenDifferentLetters(word) &&
-        inputValue.split('').every(char => word.includes(char))
-    );
+    const commonWordsPlayableWithLetters = COMMON_WORDS.reduce<string[]>((accumulator, word) => {
+      const lettersInInput = inputValue.split('');
+      const uniqueLettersInWord = new Set(word.split('')).size;
 
-    const gameListPlayablesFilteredLetter = gameListPlayables.filter(
-      (word) =>
-        word.toLowerCase().includes(initialLetter)
-    );
+      if (lettersInInput.some(char => word.includes(char)) && uniqueLettersInWord < 7) {
+        accumulator.push(word);
+      }
+      return accumulator;
+    }, []);
 
     const gameListPangrams = GAME_LIST.reduce<
       {
@@ -364,7 +357,7 @@ export default function Home() {
         sequence: string;
       }[]
     >((acc, word) => {
-      if (word.toLowerCase().includes(initialLetter)) {
+      if (inputValue.split('').every(char => word.includes(char))) {
         const isPangram = hasSevenDifferentLetters(word);
         const uniqueChars = new Set(word.toLowerCase());
         const sequence = Array.from(uniqueChars).sort().join("");
@@ -380,31 +373,33 @@ export default function Home() {
       return acc;
     }, []);
 
-    const filteredByLetterCommonWords: FilteredByLetterCommonWords[] = [];
+    const filteredByLettersCommonWords: FilteredByLetterCommonWords[] = [];
 
     const commonWordsSet = new Set(
-      commonWordsFilteredByLetterPangrams.map((word) => word.toLowerCase())
+      commonWordsFilteredByLetters.map((word) => word.toLowerCase())
     );
 
-    commonWordsByInitialPangrams.forEach((commonWordByInitialPangram) => {
+    commonWordsFilteredByLetters.forEach((commonWordFilteredByLetters) => {
       const pangrams: string[] = [];
       const commonPangrams: string[] = [];
 
-      const letterSet = new Set(commonWordByInitialPangram.toLowerCase());
+      const letterSet = new Set(commonWordFilteredByLetters.toLowerCase());
       const sortedLetterSequence = Array.from(letterSet).sort().join("");
 
       const gameListPangramsFilteredSequence = gameListPangrams.filter((pangram) => {
         return pangram.sequence === sortedLetterSequence;
       });
 
-      const gameListPangramsFilterePlayable = gameListPlayablesFilteredLetter.filter((word) => {
-        for (const char of word.toLowerCase()) {
-          if (!letterSet.has(char)) {
-            return false;
-          }
+      const gameListPangramsFilterePlayable = commonWordsPlayableWithLetters.reduce((acc: string[], word) => {
+        const wordLower = word.toLowerCase();
+        const canBeConstructed = [...wordLower].every((char) => letterSet.has(char));
+        
+        if (canBeConstructed) {
+          acc.push(word);
         }
-        return true;
-      });
+        
+        return acc;
+      }, []);
 
       const gameListPangramsFilterePlayableCommon = gameListPangramsFilterePlayable.filter((word) => {
         return commonWordsPlayable.includes(word) && word.length >= 5
@@ -417,9 +412,9 @@ export default function Home() {
         }
       });
 
-      if (pangrams.length >= 1 && gameListPangramsFilterePlayable.length >= 150 && gameListPangramsFilterePlayableCommon.length >= 15 ) {
-        filteredByLetterCommonWords.push({
-          word: commonWordByInitialPangram,
+      if (pangrams.length >= 1 && gameListPangramsFilterePlayable.length >= 20 && gameListPangramsFilterePlayableCommon.length >= 1 ) {
+        filteredByLettersCommonWords.push({
+          word: commonWordFilteredByLetters,
           pangrams,
           commonPangrams,
           playableWords: gameListPangramsFilterePlayable,
@@ -428,10 +423,10 @@ export default function Home() {
       }
     });
 
-    filteredByLetterCommonWords.sort(
+    filteredByLettersCommonWords.sort(
       (a, b) => b.pangrams.length - a.pangrams.length
     );
-    setFilteredResults(filteredByLetterCommonWords);
+    setFilteredResults(filteredByLettersCommonWords);
 
   };
 
@@ -442,6 +437,7 @@ export default function Home() {
     setLetterMainWord([]);
     setWordsWithLettersAndMainLetter([]);
     setWord(word);
+
     const lowerCaseWord = word.toLowerCase();
     const uniqueLettersSet: Set<string> = new Set();
 
@@ -470,6 +466,7 @@ export default function Home() {
         medianMaxPoints12,
         letterMainWord,
       ] = filterWords(word, letter);
+
       if (longWords >= 15 && (medianPoints && medianPoints >= 9) && (medianPoints12 && medianPoints12 >= 23)) {
         combinationsWords.push({
           letter,
@@ -504,64 +501,38 @@ export default function Home() {
   return (
     <div className="bg-gray-900">
       <div className="flex flex-col items-center space-y-4 p-4">
-        {/* Render buttons for each letter in the alphabet */}
-        <h3 className="inline-block text-2xl tracking-tight text-slate-200">
-          1. Filter all commons words by initial letter:
+        <h3 className="inline-block text-2xl tracking-tigh text-slate-200">
+          1. Search common words that contain next letters:
         </h3>
-        <div className="flex flex-wrap items-center justify-center">
-          {alphabet.map((letter) => (
-            <button
-              key={letter}
-              onClick={() => {
-                setInitialLetter(letter.toLocaleLowerCase());
-                setInputValue('');
-                setFilteredResults([]);
-                setCombinations([]);
-              }}
-              className={classNames("bg-gray-800 text-white rounded-md p-3 m-2 hover:bg-gray-700 shadow-md", initialLetter === letter.toLocaleLowerCase() ? "bg-pink-800" : "")}
-            >
-              {letter}
-            </button>
-          ))}
+
+        <div className="flex items-center gap-4">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder="Enter at least 2 letters"
+            className="flex-1 p-2 border text-gray-900 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            type="submit"
+            disabled={!isValid}
+            onClick={() => searchHandler()}
+            className={`p-2 rounded ${
+              isValid
+                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            See results
+          </button>            
         </div>
 
-        {initialLetter && (
-          <>
-            <h3 className="inline-block text-2xl tracking-tigh text-slate-200">
-              2. Add a new filter, searching words that start with &quot;{initialLetter.toUpperCase()}&quot; and include next letters:
-            </h3>
-
-            <div className="flex items-center gap-4">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={handleInputChange}
-                placeholder="Enter at least 2 letters"
-                className="flex-1 p-2 border text-gray-900 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-              <button
-                type="submit"
-                disabled={!isValid}
-                onClick={() => searchHandler()}
-                className={`p-2 rounded ${
-                  isValid
-                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                See results
-              </button>            
-            </div>
-          </>
-        )}
-
-
         {/* Render Matching Results */}
-        {isValid && initialLetter && inputValue && filteredResults && filteredResults.length > 0 && (
+        {isValid && inputValue && filteredResults && filteredResults.length > 0 && (
           <>
             <h3 className="inline-block text-2xl tracking-tigh text-slate-200">
-              3. Click the common word to check all combinations:
+              2. Click the common word to check all combinations:
             </h3>
             <div className="bg-slate-800 rounded-lg px-6 py-8 ring-1 ring-slate-900/5 shadow-xl">
               <table className="border-collapse border border-slate-500">
@@ -577,7 +548,7 @@ export default function Home() {
                       Common word pangrams
                     </th>
                     <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
-                      Playable words
+                      Playable common words
                       <br />({">"} 150)
                     </th>
                     <th className="border border-slate-700 font-semibold p-4  text-slate-200 text-center">
@@ -728,7 +699,7 @@ export default function Home() {
               </h4>
               <CodeMirror
                 className="mb-4"
-                value={pangrams.join("\n")}
+                value={pangrams.sort((a, b) => b.length - a.length).join("\n")}
                 height="200px"
                 width="500px"
                 theme={basicDark}
@@ -741,7 +712,7 @@ export default function Home() {
               <CodeMirror
                 className="mb-4"
                 value={
-                  '[\n"' + wordsWithLettersAndMainLetter.join('",\n"') + '"\n]'
+                  '[\n"' + wordsWithLettersAndMainLetter.sort((a, b) => a.localeCompare(b)).join('",\n"') + '"\n]'
                 }
                 height="200px"
                 width="500px"
@@ -754,7 +725,7 @@ export default function Home() {
                   try {
                     await navigator.clipboard.writeText(
                       '[\n"' +
-                        wordsWithLettersAndMainLetter.join('",\n"') +
+                        wordsWithLettersAndMainLetter.sort((a, b) => a.localeCompare(b)).join('",\n"') +
                         '"\n]'
                     );
                     console.log("Content copied to clipboard");
