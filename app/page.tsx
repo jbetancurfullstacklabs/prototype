@@ -510,7 +510,7 @@ export default function Home() {
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            placeholder="Enter at least 2 letters"
+            placeholder="Enter at least 3 letters"
             className="flex-1 p-2 border text-gray-900 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
